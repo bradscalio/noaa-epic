@@ -1,4 +1,4 @@
-# noaa-epic
+# AI NOTEBOOKS -- Demos and such for NOAA EPIC
 
 Materials for **EPIC 2025**: AI‑assisted weather forecasting on Red Hat (Ansible • Dev Spaces • RHEL AI • InstructLab • OpenShift).
 
