@@ -1,0 +1,15 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: cadre-forecast
+  namespace: cadre-labs
+spec:
+  predictor:
+    triton:
+      runtimeVersion: "24.05"
+      storageUri: s3://models/cadre/latest
+      resources:
+        limits:
+          cpu: "4"
+          memory: 8Gi
+          nvidia.com/gpu: "1"

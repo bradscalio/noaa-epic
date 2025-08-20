@@ -1,0 +1,35 @@
+---
+- name: Ingest NOAA open data to object storage
+  hosts: localhost
+  vars:
+    bucket_name: cadre-datasets
+    region: us-east-1
+    start_date: "{{ lookup('env','START_DATE') | default('2025-07-01') }}"
+    end_date: "{{ lookup('env','END_DATE') | default('2025-07-07') }}"
+    dataset: "gfs"   # or 'goes', etc.
+    s3_endpoint_url: "https://s3.example.local"
+  tasks:
+  - name: Ensure bucket exists (MinIO/NooBaa/S3-compatible)
+    aws_s3:
+      bucket: "{{ bucket_name }}"
+      mode: create
+      s3_url: "{{ s3_endpoint_url }}"
+      permission: private
+
+  - name: Download NOAA artifacts for range
+    loop: "{{ query('sequence','start='+start_date+',end='+end_date+',stride=1,format=%Y-%m-%d') }}"
+    vars:
+      day: "{{ item }}"
+    get_url:
+      url: "https://example.noaa.gov/data/{{ dataset }}/{{ day }}/bundle.tar"
+      dest: "/tmp/{{ dataset }}-{{ day }}.tar"
+      mode: "0644"
+
+  - name: Upload to object storage
+    aws_s3:
+      bucket: "{{ bucket_name }}"
+      object: "raw/{{ dataset }}/{{ item | basename }}"
+      src: "/tmp/{{ item | basename }}"
+      mode: put
+      s3_url: "{{ s3_endpoint_url }}"
+    loop: "{{ lookup('fileglob','/tmp/'+dataset+'-*.tar', wantlist=True) }}"

@@ -1,0 +1,49 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: cadre-train
+  namespace: cadre-labs
+spec:
+  params:
+  - name: start_date
+  - name: end_date
+  - name: scheme
+    default: "3dvar"
+  workspaces:
+  - name: shared-ws
+  tasks:
+  - name: preproc
+    taskRef:
+      name: preproc-task
+    params:
+    - name: start_date
+      value: $(params.start_date)
+    - name: end_date
+      value: $(params.end_date)
+    workspaces:
+    - name: shared-ws
+      workspace: shared-ws
+  - name: da
+    runAfter: [preproc]
+    taskRef:
+      name: da-task
+    params:
+    - name: scheme
+      value: $(params.scheme)
+    workspaces:
+    - name: shared-ws
+      workspace: shared-ws
+  - name: train
+    runAfter: [da]
+    taskRef:
+      name: train-task
+    workspaces:
+    - name: shared-ws
+      workspace: shared-ws
+  - name: eval
+    runAfter: [train]
+    taskRef:
+      name: eval-task
+    workspaces:
+    - name: shared-ws
+      workspace: shared-ws

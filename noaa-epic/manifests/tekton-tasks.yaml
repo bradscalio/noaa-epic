@@ -1,0 +1,75 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: preproc-task
+  namespace: cadre-labs
+spec:
+  params:
+  - name: start_date
+  - name: end_date
+  workspaces:
+  - name: shared-ws
+  steps:
+  - name: preproc
+    image: registry.example.com/ai/cadre-preproc:1.0
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo "Preprocessing NOAA data from ${TEKTON_PARAM_start_date} to ${TEKTON_PARAM_end_date}..."
+      python /opt/app/preproc.py --start ${TEKTON_PARAM_start_date} --end ${TEKTON_PARAM_end_date} --out /workspace/shared-ws/preproc
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: da-task
+  namespace: cadre-labs
+spec:
+  params:
+  - name: scheme
+  workspaces:
+  - name: shared-ws
+  steps:
+  - name: run-da
+    image: registry.example.com/ai/cadre-da:1.0
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo "Running Data Assimilation with scheme=${TEKTON_PARAM_scheme}..."
+      /opt/app/run_da.sh --scheme ${TEKTON_PARAM_scheme} --input /workspace/shared-ws/preproc --output /workspace/shared-ws/da
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: train-task
+  namespace: cadre-labs
+spec:
+  workspaces:
+  - name: shared-ws
+  steps:
+  - name: train
+    image: registry.example.com/ai/cadre-train:1.0
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo "Training model..."
+      python /opt/app/train.py --data /workspace/shared-ws/da --ckpt /workspace/shared-ws/model.ckpt
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: eval-task
+  namespace: cadre-labs
+spec:
+  workspaces:
+  - name: shared-ws
+  steps:
+  - name: eval
+    image: registry.example.com/ai/cadre-eval:1.0
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo "Evaluating model..."
+      python /opt/app/eval.py --ckpt /workspace/shared-ws/model.ckpt --report /workspace/shared-ws/metrics.json

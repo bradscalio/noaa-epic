@@ -1,0 +1,33 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: cadre-train-template
+  namespace: cadre-labs
+spec:
+  params:
+  - name: start_date
+  - name: end_date
+  - name: scheme
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      generateName: cadre-train-
+    spec:
+      pipelineRef:
+        name: cadre-train
+      params:
+      - name: start_date
+        value: $(tt.params.start_date)
+      - name: end_date
+        value: $(tt.params.end_date)
+      - name: scheme
+        value: $(tt.params.scheme)
+      workspaces:
+      - name: shared-ws
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi

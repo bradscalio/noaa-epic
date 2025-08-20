@@ -1,0 +1,38 @@
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  name: cadre-lab
+  namespace: cadre-labs
+  labels:
+    opendata.redhat.com/lab: "true"
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: notebook
+        image: registry.example.com/ai/cadre-workbench:1.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ENABLE_GPU
+          value: "true"
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            cpu: "4"
+            memory: 16Gi
+          requests:
+            cpu: "2"
+            memory: 8Gi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: notebooks
+          mountPath: /home/jovyan/notebooks
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: cadre-lab-pvc
+      - name: notebooks
+        persistentVolumeClaim:
+          claimName: cadre-lab-pvc
