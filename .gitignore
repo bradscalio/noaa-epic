@@ -1,0 +1,12 @@
+# Byte-compiled / caches
+__pycache__/
+.pytest_cache/
+.DS_Store
+
+# Local env / tools
+.venv/
+.env
+
+# Git / IDE
+.idea/
+.vscode/
