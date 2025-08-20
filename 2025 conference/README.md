@@ -43,4 +43,4 @@ in a clean, Git‑ready structure. It’s set up to use **Git LFS** for large bi
 
 ---
 
-_Generated automatically by ChatGPT_
+FOR THE 2025 CCONFERENCE ONLY
